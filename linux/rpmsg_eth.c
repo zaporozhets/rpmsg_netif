@@ -16,27 +16,32 @@
 // The OpenAMP message size is limited by the buffer size defined in the rpmsg kernel module.
 // For the Linux 4.19 kernel, this is currently defined as 512 bytes with 16 bytes
 // for the message header and 496 bytes of payload.
-#define MTU_RPMSG 496
+#define RPMSG_SIZE 496
+
+//MAC ADDRESS is 6 (DEST MAC ADDRESS) +6 (SORUCE MAC ADDRESS) +2 (EtherTYPE)
+//Next release will remove the MAC ADDRESS info, it is not needed
+#define MTU_RPMSG (RPMSG_SIZE - 6 - 6 - 2)
+
+
 
 struct rpmsg_eth_private {
-        struct rpmsg_device *rpdev;
-        struct net_device *netdev;
-        struct net_device_stats stats;
+    struct rpmsg_device *rpdev;
+    struct net_device *netdev;
+    struct net_device_stats stats;
 };
 
 static netdev_tx_t rpmsg_netdev_xmit(struct sk_buff *skb,
                             struct net_device *dev)
 {
     struct rpmsg_eth_private *priv = netdev_priv(dev);
-    int retval;
+    int ret;
 
-    retval = rpmsg_trysend(priv->rpdev->ept, skb->data, skb->len);
+    ret = rpmsg_send(priv->rpdev->ept, skb->data, skb->len);
+    if (ret) {
+        dev_err(&priv->rpdev->dev, "rpmsg_send failed: %d\n", ret);
+    }
 
     dev_kfree_skb_any(skb);
-
-    if (retval < 0) {
-        pr_err("failed to send rpmsg, error:%d\n", retval);
-    }
 
     priv->stats.tx_packets++;
     priv->stats.tx_bytes += skb->len;
