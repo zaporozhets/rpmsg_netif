@@ -11,10 +11,6 @@ target_include_directories(rpmsg_netif
 
 target_link_libraries(rpmsg_netif
     PRIVATE
-    xil
-    metal
-    open_amp
-    freertos
     lwipcore
     lwipallapps
 )
@@ -46,7 +42,7 @@ target_include_directories(lwip_arch PUBLIC
     ${LWIP_INCLUDE_DIRS}
 )
 
-target_link_libraries(lwip_arch PUBLIC xilinx_bsp)
+target_link_libraries(lwip_arch PUBLIC xilinx_platform)
 
 target_link_libraries(lwipcore PUBLIC lwip_arch)
 target_link_libraries(lwipallapps PUBLIC lwip_arch)
